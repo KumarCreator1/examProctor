@@ -67,12 +67,33 @@ export default function Sentinel() {
   }, [phase]);
 
   // Join Session via Socket
+  const [networkJoined, setNetworkJoined] = useState(false);
+  const [isConnected, setIsConnected] = useState(socket?.connected || false);
+
   useEffect(() => {
+    if (!socket) return;
+    
+    const onConnect = () => setIsConnected(true);
+    const onDisconnect = () => setIsConnected(false);
+    
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    // Socket.io natively buffers 'emit' payloads automatically if the connection is still actively negotiating!
     if (phase === 'positioning' && sessionId && socket) {
       socket.emit('session:join', { sessionId }, (res: any) => {
         if (!res.ok) {
           alert('Failed to join session: ' + res.error);
           setPhase('scanning');
+        } else {
+          setNetworkJoined(true);
         }
       });
     }
@@ -221,10 +242,10 @@ export default function Sentinel() {
 
             <button 
               onClick={() => setPhase('monitoring')}
-              disabled={!model}
+              disabled={!model || !networkJoined}
               className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-700 disabled:text-gray-400 text-white font-bold rounded-lg transition-colors flex justify-center items-center"
             >
-              {model ? 'Confirm Position' : 'Loading AI Engine...'}
+              {!model ? 'Loading AI Engine...' : !networkJoined ? 'Connecting to Room...' : 'Confirm Position'}
             </button>
           </div>
         )}
@@ -249,8 +270,8 @@ export default function Sentinel() {
                </div>
                <div className="flex justify-between items-center text-sm">
                  <span className="text-gray-400">Uplink Status</span>
-                 <span className="text-emerald-400 font-mono flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active
+                 <span className={`${isConnected ? 'text-emerald-400' : 'text-red-500'} font-mono flex items-center gap-2`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-red-500'}`}></span> {isConnected ? 'Active' : 'Disconnected'}
                  </span>
                </div>
             </div>

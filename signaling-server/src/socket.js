@@ -248,10 +248,14 @@ function registerSocketHandlers(io) {
 
     // ─── SENTINEL (Student PHONE): Scans QR to pair to the Desk ────────
     socket.on("session:join", async ({ sessionId }, ack) => {
+      console.log(`[Sentinel Debug] session:join received from ${socket.id} with sessionId: ${sessionId}`);
+      console.log(`[Sentinel Debug] Total exam rooms in memory: ${exams.size}`);
+      
       let targetExamCode = null;
       let targetSession = null;
 
       for (const [eCode, exam] of exams.entries()) {
+        console.log(`[Sentinel Debug] Checking exam ${eCode}, sessions: [${Array.from(exam.sessions.keys()).join(', ')}]`);
         if (exam.sessions.has(sessionId)) {
           targetExamCode = eCode;
           targetSession = exam.sessions.get(sessionId);
@@ -260,6 +264,7 @@ function registerSocketHandlers(io) {
       }
 
       if (!targetSession) {
+        console.log(`[Sentinel Debug] FAILED — no matching session found for ${sessionId}`);
         if (typeof ack === "function") ack({ ok: false, error: "Desk pairing code expired or invalid." });
         return;
       }
@@ -274,7 +279,7 @@ function registerSocketHandlers(io) {
       socket.data.examCode = targetExamCode;
       socket.data.sessionId = sessionId;
 
-      console.log(`[Phone] Sentinel paired to Desk ${sessionId}`);
+      console.log(`[Phone] Sentinel paired to Desk ${sessionId} ✓`);
 
       if (targetSession.dbSessionId) {
          // Fire and forget
