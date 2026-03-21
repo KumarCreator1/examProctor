@@ -3,6 +3,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const path = require("path");
 const { registerSocketHandlers } = require("./src/socket");
 
 const app = express();
@@ -20,6 +21,12 @@ const io = new Server(server, {
 // Health-check endpoint
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
+});
+
+// Serve frontend natively to bypass Ngrok 1-tunnel limits
+app.use(express.static(path.join(__dirname, "../client/dist")));
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
 
 // Register all socket event handlers

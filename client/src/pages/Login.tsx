@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -11,6 +11,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,10 +56,12 @@ export default function Login() {
             userRole = 'proctor';
         }
         
+        const returnUrl = location.state?.from;
+
         if (userRole === 'proctor') {
-          navigate('/dashboard');
+          navigate(returnUrl || '/dashboard');
         } else {
-          navigate('/terminal');
+          navigate(returnUrl || '/terminal');
         }
       }
     }

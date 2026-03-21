@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const socketUrl = import.meta.env.VITE_SIGNALING_SERVER_URL || 'http://localhost:3001';
+const isNgrok = window.location.protocol === 'https:' || window.location.hostname.includes('ngrok');
+const socketUrl = import.meta.env.VITE_SIGNALING_SERVER_URL || (isNgrok ? window.location.origin : 'http://localhost:3001');
 
 const SocketContext = createContext<Socket | null>(null);
 
