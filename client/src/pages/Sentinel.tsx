@@ -79,9 +79,17 @@ export default function Sentinel() {
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     
+    const onExamEnded = () => {
+       alert('The Proctor has gracefully concluded and closed this exam room. Secure monitoring finalized.');
+       setPhase('scanning');
+       setSessionId('');
+    };
+    socket.on('exam:ended', onExamEnded);
+    
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
+      socket.off('exam:ended', onExamEnded);
     }
   }, [socket]);
 
@@ -102,16 +110,17 @@ export default function Sentinel() {
   // Setup Camera for Positioning & Monitoring
   useEffect(() => {
     if ((phase === 'positioning' || phase === 'monitoring') && model) {
+      let activeStream: MediaStream | null = null;
       let requestAnimationFrameId: number;
 
       async function setupCamera() {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({
+            activeStream = await navigator.mediaDevices.getUserMedia({
               video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
             });
             if (videoRef.current) {
-              videoRef.current.srcObject = stream;
+              videoRef.current.srcObject = activeStream;
             }
           } catch (e) {
             console.error('Camera access denied or failed.', e);
@@ -171,8 +180,8 @@ export default function Sentinel() {
 
       return () => {
         if (requestAnimationFrameId) cancelAnimationFrame(requestAnimationFrameId);
-        if (videoRef.current?.srcObject) {
-          (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+        if (activeStream) {
+          activeStream.getTracks().forEach(t => t.stop());
         }
       };
     }

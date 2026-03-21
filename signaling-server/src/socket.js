@@ -82,6 +82,9 @@ function registerSocketHandlers(io) {
       socket.join(examCode);
       socket.data.role = "proctor";
       socket.data.examCode = examCode;
+      
+      // Update session ownership in case of a hard Page Refresh where socket.id changes!
+      exam.proctor = socket.id;
 
       console.log(`[Exam Room] Proctor cleanly subscribed to: ${examCode}`);
 
@@ -99,8 +102,19 @@ function registerSocketHandlers(io) {
             details: "The Proctor securely closed the active Room.",
             timestamp: Date.now()
          });
+         
+         // Fire explicit teardown event to all student terminals & sentinels
+         io.to(examCode).emit("exam:ended");
+         
+         // Gracefully update the database audits for all related sessions in parallel
+         if (exam.dbExamId) {
+             supabase.from('sessions').update({ status: 'completed' }).eq('exam_id', exam.dbExamId).then();
+         }
+
          exams.delete(examCode);
-         console.log(`[Exam Room] Securely CLOSED: ${examCode}`);
+         console.log(`[Exam Room] Securely CLOSED: ${examCode} by verified Proctor.`);
+      } else {
+         console.log(`[Access Denied] Socket ${socket.id} attempted to close exam ${examCode} but is not the registered proctor.`);
       }
     });
 

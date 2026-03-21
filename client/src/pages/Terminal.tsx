@@ -125,12 +125,22 @@ export default function Terminal() {
       setPhase('ready'); // drop back
     };
 
+    const onExamEnded = () => {
+       alert('The Proctor has gracefully concluded and closed this exam room. Your session is complete.');
+       localStorage.removeItem('integrity_session');
+       setPhase('lobby');
+       setSessionId('');
+       setExamCode('');
+    };
+
     socket.on('session:paired', onPaired);
     socket.on('sentinel:disconnected', onDisconnected);
+    socket.on('exam:ended', onExamEnded);
 
     return () => {
       socket.off('session:paired', onPaired);
       socket.off('sentinel:disconnected', onDisconnected);
+      socket.off('exam:ended', onExamEnded);
     };
   }, [socket, sessionId]);
 
@@ -138,16 +148,17 @@ export default function Terminal() {
   useEffect(() => {
     if (phase !== 'exam' || !model) return;
 
+    let activeStream: MediaStream | null = null;
     let requestAnimationFrameId: number;
 
     async function setupCamera() {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
-           const stream = await navigator.mediaDevices.getUserMedia({
+           activeStream = await navigator.mediaDevices.getUserMedia({
              video: { facingMode: 'user', width: 640, height: 480 },
            });
            if (videoRef.current) {
-             videoRef.current.srcObject = stream;
+             videoRef.current.srcObject = activeStream;
            }
         } catch(e) { /* ignore */ }
       }
@@ -177,8 +188,8 @@ export default function Terminal() {
 
     return () => {
       if (requestAnimationFrameId) cancelAnimationFrame(requestAnimationFrameId);
-      if (videoRef.current?.srcObject) {
-        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+      if (activeStream) {
+        activeStream.getTracks().forEach(t => t.stop());
       }
     };
   }, [phase, model, socket]);
@@ -223,9 +234,13 @@ export default function Terminal() {
         <div className="flex gap-4 items-center">
            {examCode && <div className="text-sm font-mono text-gray-400">Room: <span className="text-emerald-400 font-bold">{examCode}</span></div>}
            {sessionId && <div className="text-sm font-mono text-gray-400 hidden sm:block">Desk Payload: {sessionId}</div>}
-           {phase === 'exam' && (
+           {phase === 'exam' ? (
              <button onClick={handleLeaveExam} disabled={loading} className="ml-4 px-4 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-md hover:bg-red-500 hover:text-white transition-colors text-sm font-bold">
                {loading ? 'Leaving...' : 'Exit Exam'}
+             </button>
+           ) : (
+             <button onClick={signOut} className="ml-4 px-4 py-1.5 bg-gray-800 text-gray-300 border border-gray-700 rounded-md hover:bg-gray-700 transition-colors text-sm font-bold">
+               Logout
              </button>
            )}
         </div>
