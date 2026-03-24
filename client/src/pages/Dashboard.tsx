@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSocket } from '../components/SocketProvider';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabase';
+import { Navbar } from '../components/Navbar';
 
 type SessionFlag = {
   level: string;
@@ -22,7 +23,7 @@ type Session = {
 };
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const socket = useSocket();
   const [examCode, setExamCode] = useState<string | null>(null);
   const [examName, setExamName] = useState('Final Exam');
@@ -40,6 +41,7 @@ export default function Dashboard() {
          .from('exams')
          .select('*')
          .eq('proctor_id', user.id)
+         .like('title', '%[Code:%')
          .order('created_at', { ascending: false })
          .limit(1)
          .single();
@@ -184,16 +186,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white font-sans">
-      <nav className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900 sticky top-0 z-50">
-        <div className="font-bold text-xl tracking-tight">
-          <span className="text-emerald-400">Integrity</span> Proctor Dashboard
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-gray-400 font-medium">EXAM CODE: <span className="text-white text-lg ml-1 bg-gray-800 px-3 py-1 rounded select-all font-mono tracking-widest border border-gray-700">{examCode}</span></span>
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse ml-2 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-          <span className="text-emerald-500 font-bold tracking-wide border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 rounded shadow-sm">LIVE</span>
-          
+    <div className="min-h-screen bg-gray-950 text-white font-sans flex flex-col">
+      <Navbar title={examCode ? `Room: ${examCode}` : "Proctor Dashboard"}>
+        {examCode && (
           <button 
             onClick={() => {
                if(window.confirm("Close this exam room entirely?")) {
@@ -201,15 +196,14 @@ export default function Dashboard() {
                   setExamCode(null);
                }
             }} 
-            className="ml-4 px-3 py-1.5 bg-gray-900 border border-red-500/30 hover:bg-red-500 hover:text-white text-red-400 font-medium rounded-md transition-colors"
+            className="ml-4 px-3 py-1.5 bg-gray-900 border border-red-500/30 hover:bg-red-500 hover:text-white text-red-400 font-medium rounded-md transition-colors text-sm"
           >
             End Exam
           </button>
-          <button onClick={signOut} className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-md transition-colors border border-gray-700">Logout</button>
-        </div>
-      </nav>
+        )}
+      </Navbar>
 
-      <div className="container mx-auto py-8 px-4">
+      <main className="flex-1 p-6 flex flex-col items-center justify-center">
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
            <div className="bg-gray-900 border border-gray-800 p-5 rounded-xl shadow-lg flex flex-col justify-between">
@@ -324,7 +318,7 @@ export default function Dashboard() {
             })}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

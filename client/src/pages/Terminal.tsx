@@ -4,6 +4,7 @@ import { useSocket } from '../components/SocketProvider';
 import { useAuth } from '../components/AuthProvider';
 import * as tf from '@tensorflow/tfjs';
 import * as blazeface from '@tensorflow-models/blazeface';
+import { Navbar } from '../components/Navbar';
 
 type Phase = 'lobby' | 'pairing' | 'ready' | 'exam';
 
@@ -227,24 +228,15 @@ export default function Terminal() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans">
-      <nav className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
-        <div className="font-bold text-xl tracking-tight">
-          <span className="text-emerald-400">Integrity</span> Terminal
-        </div>
-        <div className="flex gap-4 items-center">
-           {examCode && <div className="text-sm font-mono text-gray-400">Room: <span className="text-emerald-400 font-bold">{examCode}</span></div>}
-           {sessionId && <div className="text-sm font-mono text-gray-400 hidden sm:block">Desk Payload: {sessionId}</div>}
-           {phase === 'exam' ? (
-             <button onClick={handleLeaveExam} disabled={loading} className="ml-4 px-4 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-md hover:bg-red-500 hover:text-white transition-colors text-sm font-bold">
+      <Navbar title={phase === 'exam' ? (examCode ? `Room: ${examCode}` : "Exam Focus") : "Terminal"} hideProfile={phase === 'exam'}>
+           {examCode && phase !== 'exam' && <div className="text-sm font-mono text-gray-400 mr-2">Room: <span className="text-emerald-400 font-bold">{examCode}</span></div>}
+           {sessionId && phase !== 'exam' && <div className="text-sm font-mono text-gray-400 hidden sm:block mr-2">Desk: {sessionId}</div>}
+           {phase === 'exam' && (
+             <button onClick={handleLeaveExam} disabled={loading} className="ml-4 px-4 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-md hover:bg-red-500 hover:text-white transition-colors text-sm font-bold shadow-lg">
                {loading ? 'Leaving...' : 'Exit Exam'}
              </button>
-           ) : (
-             <button onClick={signOut} className="ml-4 px-4 py-1.5 bg-gray-800 text-gray-300 border border-gray-700 rounded-md hover:bg-gray-700 transition-colors text-sm font-bold">
-               Logout
-             </button>
            )}
-        </div>
-      </nav>
+      </Navbar>
 
       <main className="flex-1 flex items-center justify-center p-6">
         

@@ -56,12 +56,20 @@ export default function Login() {
             userRole = 'proctor';
         }
         
-        const returnUrl = location.state?.from;
+        const returnUrl = location.state?.from as string | undefined;
 
         if (userRole === 'proctor') {
-          navigate(returnUrl || '/dashboard');
+          if (returnUrl === '/terminal' || returnUrl === '/sentinel') {
+            navigate('/dashboard');
+          } else {
+            navigate(returnUrl || '/dashboard');
+          }
         } else {
-          navigate(returnUrl || '/terminal');
+          if (returnUrl === '/dashboard') {
+            navigate('/terminal');
+          } else {
+            navigate(returnUrl || '/terminal');
+          }
         }
       }
     }
