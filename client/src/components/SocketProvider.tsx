@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-const isNgrok = window.location.protocol === 'https:' || window.location.hostname.includes('ngrok');
 const ENV_URL = import.meta.env.VITE_SIGNALING_SERVER_URL;
-// FORCE window.location.origin if served via Ngrok/HTTPS to completely override static dev .env files
-const socketUrl = isNgrok ? window.location.origin : (ENV_URL || 'http://localhost:3001');
+// Use explicit ENV variable if provided, otherwise fallback appropriately
+const socketUrl = ENV_URL || (window.location.hostname.includes('ngrok') ? window.location.origin : 'http://localhost:3001');
 
 const SocketContext = createContext<Socket | null>(null);
 
