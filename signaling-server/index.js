@@ -7,7 +7,11 @@ const path = require("path");
 const { registerSocketHandlers } = require("./src/socket");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"]
+}));
 
 const server = http.createServer(app);
 
@@ -15,6 +19,7 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
+    allowedHeaders: ["ngrok-skip-browser-warning"],
   },
 });
 
