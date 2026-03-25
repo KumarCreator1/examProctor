@@ -66,3 +66,33 @@ You will get another secure HTTPS URL for your frontend (e.g., `https://<another
 
 ## 5. Test on Devices
 You can now open this frontend HTTPS URL on your phone or any other remote device. Because the site is served over an official HTTPS connection, the device browser will allow access to device features like the camera (which is required for the proctoring process).
+
+## 6. Folder Structure
+
+For hackathon organizers and contributors, here is an overview of the project's folder structure:
+
+```text
+examProctorSoftware/
+├── client/                 # Frontend React application (Vite)
+│   ├── public/             
+│   ├── src/                
+│   │   ├── assets/         # Images, fonts, etc.
+│   │   ├── components/     # Reusable React components
+│   │   ├── lib/            # Utility libraries and helpers
+│   │   ├── pages/          # Application routes/pages
+│   │   ├── App.tsx         # Main application component
+│   │   ├── index.css       # Global styles
+│   │   └── main.tsx        # Application entry point
+│   ├── package.json        # Frontend dependencies
+│   └── vite.config.ts      # Vite configuration
+├── signaling-server/       # WebRTC signaling backend (WebHook) (Node.js)
+│   ├── src/                
+│   │   ├── handlers/       # Socket.io event handlers
+│   │   ├── lib/            # Server utilities
+│   │   ├── services/       # Core business logic services
+│   │   ├── socket.js       # Socket.io setup
+│   │   └── store.js        # In-memory state management
+│   ├── index.js            # Main server entry point
+│   └── package.json        # Backend dependencies
+└── supabase_schema.sql     # Database schema for Supabase
+```
